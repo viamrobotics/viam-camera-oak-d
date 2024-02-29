@@ -392,6 +392,7 @@ class OakDModel(Camera, Reconfigurable, Stoppable):
                   The metadata associated with this response
         """
         LOGGER.debug("get_images called")
+        start_time = time.time()
         cls: OakDModel = type(self)
 
         if not cls.worker.running:
@@ -403,8 +404,8 @@ class OakDModel(Camera, Reconfigurable, Stoppable):
         seconds_float: float = None
 
         # We really want to do this as in-sync as possible to reduce latency between color & depth
-        color_data: Optional(CapturedData) = None
-        depth_data: Optional(CapturedData) = None
+        color_data: Optional[CapturedData] = None
+        depth_data: Optional[CapturedData] = None
         if COLOR_SENSOR in self.sensors and DEPTH_SENSOR in self.sensors:
             color_data, depth_data = await cls.worker.get_synced_color_depth_data()
 
@@ -444,6 +445,9 @@ class OakDModel(Camera, Reconfigurable, Stoppable):
         metadata = ResponseMetadata(
             captured_at=Timestamp(seconds=seconds_int, nanos=nanoseconds_int)
         )
+        end_time = time.time()
+        elapsed_time_ms = (end_time - start_time) * 1000
+        LOGGER.debug(f"get_images time elapsed: {elapsed_time_ms:.2f} milliseconds")
         return l, metadata
 
     async def get_point_cloud(
